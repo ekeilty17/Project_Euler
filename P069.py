@@ -88,7 +88,7 @@ def phi_3(n):
 mx = 0
 mx_n = 0
 for n in range(2,1000000):
-    p = phi_2(n)
+    p = phi_3(n)
     print n,p
     if n/float(p) > mx:
         mx = n/float(p)

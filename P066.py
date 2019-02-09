@@ -79,12 +79,14 @@ print
 print "D =",max_idx,"\tx =",max_x
 """
 
-#using a paper by HENDRIK W. LENSTRA, JR.
-#take 14
-#   the sqrt(14) can be written as the repeated fraction 3, (1,2,1,3) with a period of 4
-#   if we truncate that at the last element in the period you get 3, (1, 2, 1) which equals 15/4
-#   and 15*15 = 14*4*4 + 1
-#   This is true for all numbers
+#using a paper by Hendrik W. Lenstra, Jr. http://www.ams.org/notices/200202/fea-lenstra.pdf
+# take 14
+#   the sqrt(14) can be written as the repeated fraction 3, (1,2,1,6)
+#   if we truncate that at the last element in the period you get 3, (1, 2, 1) 
+#   evaluating that continued fraction gives 15/4
+#   15**2 - 14*(4**2) = 1...and we are done
+#   if this is not the case, square the fundamental solution set (15 + 4*sqrt(14)) until it does equal 1
+
 
 #code from P064 to generate the continued fraction
 def ContinuedFraction(n):
@@ -119,14 +121,8 @@ def gcd(a, b):
     return a
 
 #take code from P065.py to generate the truncated fraction
-def TruncatedFraction(n):
-    fract = ContinuedFraction(n)
-    if len(fract[1]) % 2 == 1:
-        fract = [fract[0]] + fract[1]
-    else:
-        fract = [fract[0]] + fract[1][:-1]
-
-    #accum = [a,b] where f ~ a/b
+def TruncatedFraction(fract):
+    
     accum = [fract[-1], 1]
     for i in range(len(fract)-2,-1,-1):
         a = accum[0]
@@ -136,27 +132,41 @@ def TruncatedFraction(n):
         g = gcd(accum[0],accum[1])
         accum[0] /= g
         accum[1] /= g
+
     return accum
 
+def square_fundamental_solution(TF, D):
+    a = TF[0]
+    b = TF[1]
+
+    return [a*a + D*b*b, 2*a*b]
+
 def Diophantine(D):
-    return TruncatedFraction(D)[0]
+    # continued fraction of sqrt(D)
+    CF = ContinuedFraction(D)
+    
+    # The only exception to truncating the fraction
+    # is if the length of the period is 1
+    if len(CF[1]) == 1:
+        CF = [CF[0]] + CF[1]
+    else:
+        CF = [CF[0]] + CF[1][:-1]
+    
+    TF = TruncatedFraction(CF)
 
-"""
-max_x = 0
-max_idx = -1
+    # I think you only ever have to square it once, but I am not sure
+    while TF[0]**2 - D*TF[1]**2 != 1:
+        #print TF[0]**2 - D*TF[1]**2
+        #print TF
+        TF = square_fundamental_solution(TF, D)
+
+    return TF[0]
+
+D = [0, 0] # the 0,0 part just make the indexes match
 for i in range(2,1001):
-    x = Diophantine(i)
-    print i, x
-    if x != -1:
-        if x > max_x:
-            max_x = x
-            max_idx = i
-
+    d = Diophantine(i)
+    D += [d]
+    print i,'\t',d,'\t',ContinuedFraction(i)
 print
-print "D =",max_idx,"\tx =",max_x
-"""
+print max(D), D.index(max(D))
 
-#for i in range(2,100):
-    #print i,'\t',Diophantine(i),'\t',ContinuedFraction(i)
-
-print 991,'\t',Diophantine(991),'\t',ContinuedFraction(991)
