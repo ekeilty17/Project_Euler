@@ -97,7 +97,7 @@ print P1 * P2
 # by Euler's theorem, this is also equal to the number of odd partitions
 # This utilizes te formula
 #   SUM{ D(n) * x**n } = SUM{ O(n) * x**n } = PRODUCT{ 1 + x**n }
-def DistinctPartitions(n)
+def DistinctPartitions(n):
     # starting with polynomial x + 1
     P = Polynomial([Term(1, 1), Term(1, 0)])
     for i in range(2, n+1):
@@ -129,3 +129,37 @@ p = Partition(n)
 #   for example: P(4) = {1, 1, 1, 1}, {1, 1, 2}, {2, 2}, {1, 3}, {4}
 # However, the problem does not consider {4} a valid partition, so we need to subtract 1
 print "number of partitions of", n, "is", p-1
+
+print
+# Dynamic Programming solution
+#   This utilizes a recursive relation: how can obtain the partition of n given all the partitions less than n?
+#   Let's ananlyze the case of n = 6
+#       5 | + 1                     = # of ways to partition 1 with numbers <= 5
+#       4 | + 2                     = # of ways to partition 2 with numbers <= 4
+#       4 | + 1 + 1
+#       3 | + 3                     = # of ways to partition 3 with numbers <= 3
+#       3 | + 2 + 1
+#       3 | + 1 + 1 + 1
+#       2 | + 2 + 2                 = # of ways to partition 4 with numbers <= 2
+#       2 | + 2 + 1 + 1
+#       2 | + 1 + 1 + 1 + 1
+#       1 | + 1 + 1 + 1 + 1 + 1     = # of ways to partition 5 with numbers <= 1
+#
+#   If we define a new function P(n, k) = number of ways to partition to partition n with numbers <= k, then
+#               P(n) = sum( P(n-k, k) ) for k = 1 --> n
+#   now we make an algorithm to exploit this
+
+def P(n):
+
+    partitions = [0]*(n+1)
+    partitions[0] = 1
+
+    for i in range(1, 100):
+        for j in range(i, n+1):
+            partitions[j] += partitions[j - i]
+
+    return partitions
+
+p = P(n)
+print p
+print "number of partitions of", n, "is", p[-1]

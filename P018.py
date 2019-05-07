@@ -16,13 +16,13 @@ a = [
 "04 62 98 27 23 09 70 98 73 93 38 53 60 04 23"
 ]
 
+"""
 num = []
 for i in range(0,len(a)):
     temp = []
     for j in range(0,len(a[i]),3):
         temp += [int(a[i][j:j+3])]
     num += [temp]
-
 
 #every path can be thought of as a 14 binary number
 #   if there is a zero it means go left
@@ -45,7 +45,6 @@ def binSum(s,n):
         accum += int(s[i])
     return accum
 
-
 def getPath(a,bi):
     out = []
     for r in range(0,len(num)):
@@ -67,3 +66,23 @@ print "Maximum Path"
 print getPath(num,paths[max_path_index])
 print max_path,max_path_index
 print paths[max_path_index]
+"""
+
+#The above solves the problem and I think the solution was pretty clever
+#But now that I know about binary trees and graphs I can solve it much easier
+
+a = [l.split() for l in a]
+for i in range(len(a)):
+    for j in range(len(a[i])):
+        a[i][j] = int(a[i][j])
+#print a
+#a is now a 2D array that is basically a binary tree
+
+def getMaxSum(root, i, j):
+    if i == len(root)-1:
+        return root[i][j]
+    L = getMaxSum(root, i+1, j)
+    R = getMaxSum(root, i+1, j+1)
+    return root[i][j] + max(L,R)
+
+print getMaxSum(a, 0, 0)
