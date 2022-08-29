@@ -1,26 +1,31 @@
-def digits(n):
-    if n < 0:
-        return []
-    if n == 0:
-        return [0]
-    out = []
-    while n != 0:
-        out = [n%10] + out
-        n /= 10
-    return out
+def digit_power_sum(n, e):
+    return sum([int(d)**e for d in str(n)])
 
-def dig_sum(n,e):
-    accum = 0
-    d = digits(n)
-    for i in d:
-        accum += i**e
-    return accum
+# That hard part about this problem is knowing how far to look in your search
+# Take N=4 for example
+#   9     < 1 * 9^4 = 6561
+#   99    < 2 * 9^4 = 13122
+#   999   < 3 * 9^4 = 19683
+#   9999  < 4 * 9^4 = 26244
+#   99999 > 5 * 9^4 = 32805
+# So we know, we don't have to check anything beyond 10^5-1
+# because it will always be larger than the 4th-power sum of its digits
 
-accum = 0
-for i in range(2,1000000):
-    if i == dig_sum(i,5):
-        print i
-        accum += i
+def upper_bound(e):
+    d = 1
+    while (10**d)-1 < d * (9**e):
+        d += 1
+    return 10**d
 
-print
-print accum
+def main(N=5):
+    
+    U = upper_bound(N)
+    powers_sums = [n for n in range(2, U) if n == digit_power_sum(n, N)]
+    total = sum(powers_sums)
+    
+    #print(powers_sums)
+    print(f"The sum of all the numbers that can be written as the sum of powers of {N} of their digits is:", total)
+    return total
+
+if __name__ == "__main__":
+    main()

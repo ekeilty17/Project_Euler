@@ -1,86 +1,48 @@
+from collections import defaultdict
+import itertools
+import math
+
 def getDigits(n):
-    out = []
-    while n != 0:
-        out = [n%10] + out
-        n /= 10
-    return out
+    return [int(d) for d in str(n)]
 
-cubes = []
-found = False
-i = 1
-while not found:
-    print i**3
-    nxt = getDigits(i**3)
-    cubes = [nxt] + cubes
-    cnt = 0
-    for j in range(0,len(cubes)):
-        if list(sorted(cubes[j])) == list(sorted(nxt)):
-            cnt += 1
-        if len(nxt) > len(cubes[j]):
-            break
-    if cnt == 5:
-        print
-        for j in range(0,len(cubes)):
-            if list(sorted(cubes[j])) == list(sorted(nxt)):
-                print cubes[j]
-        found = True
-    i += 1
-
-#as much as it annoys me, the below method takes too long, I need a different approach
-"""
-def getDigits(n):
-    out = []
-    while n != 0:
-        out = [n%10] + out
-        n /= 10
-    return out
-
-def numDigits(n):
-    accum = 0
-    while n != 0:
-        accum += 1
-        n /= 10
-    return accum
-
-def isPermutation(S):
-    for i in range(1,len(S)):
-        if list(sorted(getDigits(S[0]))) != list(sorted(getDigits(S[i]))):
+# For a given permutation of digits, the largest it can be is the digits sorted from largest to smallest
+# so we just need to check that for all cubes between n**3 and this upperbound, none of these contain the same permutation of digits
+def check_remaining_cubes(digits, n):
+    digits = list(sorted(digits))
+    upper_bound = int( "".join([str(d) for d in reversed(digits)]) )
+    while n**3 <= upper_bound:
+        if tuple(sorted(getDigits(n**3))) == digits:
             return False
+        n += 1
     return True
 
-def stuff():
-    n = 10000
-    #two things we can check for to make more efficient
-    #   1) if number of digits are not equal, they cannot be permutations
-    #   2) if they are not permutations, we don't have to keep iterating
-    for a in range(1,n-4):
-        for b in range(a+1,n-3):
-            if numDigits(b) > numDigits(a):
-                break
-            for c in range(b+1,n-2):
-                print a**3,b**3,c**3
-                if numDigits(c) > numDigits(b):
-                    break
-                if not isPermutation([a**3,b**3]):
-                    break
-                for d in range(c+1,n-1):
-                    print a**3,b**3,c**3,d**3
-                    if numDigits(d) > numDigits(c):
-                        break
-                    if not isPermutation([a**3,b**3,c**3]):
-                        break
-                    for e in range(d+1,n):
-                        print a**3,b**3,c**3,d**3,e**3
-                        if numDigits(d) > numDigits(e):
-                            break
-                        if not isPermutation([a**3,b**3,c**3,d**3]):
-                            break
-                        if isPermutation([a**3,b**3,c**3,d**3,e**3]):
-                            return [a,b,c,d,e]
-    return [-1,-1,-1,-1,-1]
+# we just iterate through each cube and keep a dictionary indexed by its digits
+# if two numbers have the same set of digits, they will index into the same slot in the dictionary
+# once we get a list of size N, then we have found the desired set of cubes
+def brute_force(N):
 
-L = stuff()
-print
-print L[0],L[1],L[2],L[3],L[4]
-print L[0]**3,L[1]**3,L[2]**3,L[3]**3,L[4]**3
-"""
+    cubes = defaultdict(list)
+    n = 1
+    while True:
+        ordered_digits = tuple(sorted(getDigits(n**3)))
+        cubes[ordered_digits].append(n)
+
+        if len(cubes[ordered_digits]) == N:
+            # The question says it needs to be exactly N, 
+            # so we need to check that no other permutations produce perfect cubes
+            if check_remaining_cubes(ordered_digits, n):
+                return cubes[ordered_digits]
+        
+        n += 1
+
+def main(N=5):
+
+    cubes = brute_force(N)
+    #print([(m, m**3) for m in cubes])
+
+    min_cube = min(cubes)**3
+    print(f"The smallest cube for which exactly {N} permutations of its digits are cube is:", min_cube)
+    return min_cube
+
+if __name__ == "__main__":
+    main()

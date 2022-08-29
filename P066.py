@@ -1,172 +1,125 @@
-#My first attempt...too slow
-"""
-def Diophantine(D):
-    #perfect squares have no solution
-    if D**0.5 == int(D**0.5):
-        return -1
-
-    #x^2 - D*y^2 = 1
-    x = 1
-    y = 1
-    while True:
-        if x*x - D*y*y == 1:
-            return x
-        y += 2
-        #since we are trying to minimize x,
-        #we want to check all possible y before upping x
-        if x*x < D*y*y:
-            x += 1
-            if x%2 == 0:
-                y = 1
-            else:
-                y = 2
-    return -1
-"""
-
-#this was a second attempt, but again it's too slow
-#I need a whole different method
-"""
 import math
+import numpy as np
 
-def getDigits(n):
-    out = []
-    while n != 0:
-        out = [n%10] + out
-        n /= 10
-    return out
-
-def DigitalSum(n):
-    while n >= 10:
-        n = sum(getDigits(n))
-    return n
-
-#this accurate but very slow for large numbers
 def isPerfectSquare(n):
-    #easy checks
-    if n%10 not in [0, 1, 4, 5, 6, 9]:
-        return False
-    if DigitalSum(n) not in [1, 4, 7, 9]:
-        return False
-    if math.sqrt(n) == int(math.sqrt(n)):
-        return True
-    return False
+    s = math.sqrt(n)
+    return math.floor(s)**2 == n or math.floor(s)**2 == n
 
-def Diophantine(D):
-    #perfect squares have no solution
+# The brute force method takes about 5 minutes, which isn't too bad
+# but we can do much better using some results from number theory
+def brute_force(D, limit=10**10):
+    # perfect squares have no solution
     if isPerfectSquare(D):
-        return -1
+        return 0
+    
     y = 1
-    while True:
-        #this is efficient, but inaccurate for large numbers
-        #if (1 + D*y*y)**0.5 == int((1 + D*y*y)**0.5):
+    while y < limit:
+        # If we find a perfect square, we can stop because (1 + D*y^2) always increases
         if isPerfectSquare(1 + D*y*y):
-            return int((1 + D*y*y)**0.5)
-        else:
-            y += 1
-    return -1
-
-max_x = 0
-max_idx = -1
-for i in range(2,101):
-    x = Diophantine(i)
-    print i, x
-    if x != -1:
-        if x > max_x:
-            max_x = x
-            max_idx = i
-
-print
-print "D =",max_idx,"\tx =",max_x
-"""
-
-#using a paper by Hendrik W. Lenstra, Jr. http://www.ams.org/notices/200202/fea-lenstra.pdf
-# take 14
-#   the sqrt(14) can be written as the repeated fraction 3, (1,2,1,6)
-#   if we truncate that at the last element in the period you get 3, (1, 2, 1) 
-#   evaluating that continued fraction gives 15/4
-#   15**2 - 14*(4**2) = 1...and we are done
-#   if this is not the case, square the fundamental solution set (15 + 4*sqrt(14)) until it does equal 1
+            return int(math.sqrt(1 + D*y*y))
+        
+        y += 1
+    
+    # couldn't find a solution under the limit
+    return 0
 
 
-#code from P064 to generate the continued fraction
-def ContinuedFraction(n):
-    if n**0.5 == int(n**0.5):
-        return (int(n**0.5),[0])
-    #we iterate on the form (sqrt(n) + a)/b
-    #   fract = [a, b]
+# using a paper by Hendrik W. Lenstra, Jr. http://library.msri.org/books/Book44/files/01lenstra.pdf
+# We notice that we can factor 
+#       x^2 - d y^2 = 1     -->     (x + y * sqrt(d)) * (x - y * sqrt(d)) = 1
+# 
+# Now we can view all numbers of the form (x + y * sqrt(d)) as a ring 
+# with (x + y * sqrt(d)) * (x - y * sqrt(d)) defined as the norm of (x + y * sqrt(d))
+# as a short-hand, I'll write (x + y * sqrt(d)) as a vector [x, y]
+# 
+# Notice that if we find |[x, y]| = 1, then |[x, y]|^n = 1
+# So there are an infinite number of solutions to x^2 - d y^2 = 1, but the smallest such solution is called the fundamental solution
+# 
+# Recall the periodicity of the partial fractions of sqaure roots
+# take d = 14 as an example,
+#   the sqrt(14) can be written as the repeated fraction: [3, (1, 2, 1, 6)]
+#
+# # We apply Dirichlet’s unit theorem from algebraic number theory
+#   If we truncate that at the last element in the period you get [3, (1, 2, 1)]
+#   evaluating that continued fraction gives 15/4, which is a good approximation to sqrt(14)
+#   Notice 15**2 - 14*(4**2) = 1
+#
+# For a general d, we use results from Buhler and Wagon 2008
+#   If the period of sqrt(d) is even, then we truncate at the end of the first period
+#   If the period of sqrt(d) is odd, then we truncate at the end of the second period
 
-    #sqrt(n) = (sqrt(n) + 0)/1
-    fract = [0, 1]
 
-    #(sqrt(n) + a)/b = y + 1/[ (sqrt(n) -a + b*y)/ ((n - (a-b*y)**2)/b) ]
-    out = []
-    while True:
-        #If b ever equals 1, by definition we have reach the recurrive point
-        if fract[1] == 1 and out != []:
-            break
-        y = int((n**0.5 + fract[0])/fract[1])
-        out += [y]
-        fract_prev = list(fract)
-        a = fract[0]
-        b = fract[1]
-        fract[0] = -a + b*y
-        fract[1] = (n - (a-b*y)**2)/b
-    return (out[0], out[1:] + [fract[0] + int(n**0.5)])
+# code from P064.py
+def SquareRootContinuedFraction(n):
+    if math.sqrt(n) == int(math.sqrt(n)):
+        return [ int(math.sqrt(n)) ]
+
+    a, b = 0, 1
+    continued_fraction = []
+
+    while b != 1 or len(continued_fraction) == 0:
+        
+        y = math.floor( (math.sqrt(n) + a)/b )
+        continued_fraction.append(y)
+        a = b*y - a
+        b = (n - a**2) // b
+    
+    y = math.floor( (math.sqrt(n) + a)/b )
+    continued_fraction.append(y)
+    return continued_fraction
+
 
 def gcd(a, b):
     if b > a:
-        a, b = b, a
-    while b != 0:
-        a, b = b, a%b
-    return a
+        return gcd(b, a)
+    if a % b == 0:
+        return b
+    return gcd(b, a%b)
 
-#take code from P065.py to generate the truncated fraction
-def TruncatedFraction(fract):
+# code from P065.py
+def calculateTruncatedFraction(continued_fraction):
     
-    accum = [fract[-1], 1]
-    for i in range(len(fract)-2,-1,-1):
-        a = accum[0]
-        b = accum[1]
-        accum[0] = fract[i]*a + b
-        accum[1] = a
-        g = gcd(accum[0],accum[1])
-        accum[0] /= g
-        accum[1] /= g
+    a, b = 1, 0
+    for n in reversed(continued_fraction):
+        a, b = a*n + b, a
+    
+    # You don't actually need to do this because it everything will always be relatively prime
+    #g = gcd(a, b)
+    #a = a // g
+    #b = b // g
+    return a, b
 
-    return accum
-
-def square_fundamental_solution(TF, D):
-    a = TF[0]
-    b = TF[1]
-
-    return [a*a + D*b*b, 2*a*b]
-
-def Diophantine(D):
+def pell_equation(D):
+    # perfect squares have no solution
+    if isPerfectSquare(D):
+        return 0
+    
     # continued fraction of sqrt(D)
-    CF = ContinuedFraction(D)
-    
-    # The only exception to truncating the fraction
-    # is if the length of the period is 1
-    if len(CF[1]) == 1:
-        CF = [CF[0]] + CF[1]
+    continued_fraction = SquareRootContinuedFraction(D)
+
+    if len(continued_fraction) % 2 == 1:
+        continued_fraction = continued_fraction[:-1]        # if length of the period is odd, we do one cycle
     else:
-        CF = [CF[0]] + CF[1][:-1]
+        continued_fraction += continued_fraction[1:-1]      # if length of the period is even, we do two cycles
+
+    # According to Dirichlet’s unit theorem, these will be the fundamental solutions
+    x, y = calculateTruncatedFraction(continued_fraction)
+    return x
+
+def main(N=1000):
+
+    X = [0, 0]      # X[D] is the minimum value x that satisfy the Diophantine equation with D, 0 means no solution
+    for D in range(2, N+1):
+        #x = brute_force(D)
+        x = pell_equation(D)
+        #print(D, x)
+        X.append(x)
     
-    TF = TruncatedFraction(CF)
+    D_max = np.argmax(X)
+    x_max = max(X)
+    #print(x_max)
+    print(f"The value of D <= {N} in minimal solutions of x for which the largest value of x is obtained is:", D_max)
+    return D_max
 
-    # I think you only ever have to square it once, but I am not sure
-    while TF[0]**2 - D*TF[1]**2 != 1:
-        #print TF[0]**2 - D*TF[1]**2
-        #print TF
-        TF = square_fundamental_solution(TF, D)
-
-    return TF[0]
-
-D = [0, 0] # the 0,0 part just make the indexes match
-for i in range(2,1001):
-    d = Diophantine(i)
-    D += [d]
-    print i,'\t',d,'\t',ContinuedFraction(i)
-print
-print max(D), D.index(max(D))
-
+if __name__ == "__main__":
+    main()

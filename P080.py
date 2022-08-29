@@ -1,52 +1,68 @@
-def sqrt(n, digits=100):
+import math
+
+# How does this work
+#   We can decompose sqrt(n) as:        sqrt(n) = 10*A + B
+#   Therefore                           n = (10*A + B)^2 = 100*A^2 + 20AB + B^2
+#   
+#   We can update our approximation of sqrt(n) by finding the largest B we can add
+def sqrt_by_hand(n, d):
     
     # putting n in a more usable form
-    n = [int(x) for x in str(n)]
-    if len(n) % 2 == 1:
-        n = [0] + n
+    digits = [int(d) for d in str(n) if d != '.']
+    if len(digits) % 2 == 1:
+        digits = [0] + digits
     
-    c = 0
-    y = 0
-    p = 0
-    while len(str(p)) < digits:
-        
-        # moving next two digits down
-        c = 100*c + 10*n[0] + n[1]
+    sqrt = 0
+    remainder = 0
 
-        # adding zeros to end of number
-        n = n[2:] + [0, 0]
-        
-        
-        # finding x s.t. x(20p + x) <= c
-        x = 0
-        while x*(20*p + x) <= c:
-            x += 1
-        x -= 1
-        
-        # x is what goes on top as the next digit
-        p = 10*p + x
-        
+    while len(str(sqrt)) < d:
+
+        # bring down next two digits
+        remainder = 100*remainder + 10*digits[0] + digits[1]
+
+        # adding zeros to end of number for next iterations
+        digits = digits[2:] + [0, 0]
+
+        # finding largest B s.t. 20*A*B + B^2 <= remainder
+        B = 0
+        while 20*sqrt*B + B**2 <= remainder:
+            B += 1
+        B -= 1
+
         # y is what goes under the number that was brought down
-        y = x*(20*p + x)
-        # take the difference
-        c -= y
+        y = 20*sqrt*B + B**2
 
-    return p
+        # update the remainder
+        remainder -= y
 
-def digital_sum(n):
-    out = 0
-    while n != 0:
-        out += n%10
-        n /= 10
-    return out
+        # x is the next digit in the sqrt
+        sqrt = 10*sqrt + B
+    
 
-print digital_sum(sqrt(2))
+    # This is just putting the results in a nice form
+    non_decimal_part = str(int(math.sqrt(n)))
+    sqrt_str = str(sqrt)
+    sqrt_str = sqrt_str[:len(non_decimal_part)] + '.' + sqrt_str[len(non_decimal_part):]
 
-accum = 0
-squares = [x**2 for x in range(1, 11)]
-for n in range(1, 101):
-    print n
-    if n in squares:
-        continue
-    accum += digital_sum(sqrt(n))
-print accum
+    # return in the form of a string
+    return sqrt_str
+
+def digital_sum(x):
+    return sum([int(d) for d in str(x) if d != "."])
+
+def main(N=100, d=100):
+
+    total = 0
+    squares = [n**2 for n in range(1, int(math.sqrt(N))+2)]
+    for n in range(1, N+1):
+        if n in squares:
+            continue
+
+        sqrt_n = sqrt_by_hand(n, d)
+        total += digital_sum(sqrt_n)
+
+    print(f"The digital sum of the first {d} digits of all irrational square roots under {N} is:", total)
+    return total
+
+if __name__ == "__main__":
+    main()

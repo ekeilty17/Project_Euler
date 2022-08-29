@@ -1,14 +1,10 @@
-def binary(n):
+def decimal_to_binary(n):
     if n == 0:
         return 0
-    return n%2 + 10*binary(n//2)
+    return n%2 + 10*decimal_to_binary(n//2)
 
 def getDigits(n):
-    out = []
-    while n != 0:
-        out = [n%10] + out
-        n /= 10
-    return out
+    return [int(d) for d in str(n)]
 
 def isPalindrome(n):
     d = getDigits(n)
@@ -20,11 +16,17 @@ def isPalindrome(n):
             return True
     return False
 
-accum = 0
-for i in range(0,1000000):
-    if isPalindrome(i) and isPalindrome(binary(i)):
-        print i
-        accum += i
+# This is pretty fast, but could be faster
+# Not sure if there's some other method to improve it
+def main(N=10**6):
 
-print
-print accum
+    total = 0
+    for i in range(N):
+        if isPalindrome(i) and isPalindrome(decimal_to_binary(i)):
+            total += i
+    
+    print(f"The sum of all numbers, less than {N}, which are palindromic in base 10 and base 2 is:", total)
+    return total
+
+if __name__ == "__main__":
+    main()

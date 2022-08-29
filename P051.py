@@ -1,79 +1,108 @@
-def Sieve(n):
+from collections import defaultdict
+from itertools import chain, combinations
+
+def Sieve_of_Eratosthenes(n):
     #Error Check
     if type(n) != int and type(n) != long:
         raise TypeError("must be integer")
     if n < 2:
         raise ValueError("must be greater than one")
-    sieve = [True] * (n+1)
-    prime_list = []
-    for i in xrange(2,n+1):
+    m = (n-1) // 2 #list only needs to be half as long bc we dont care about even numbers
+    sieve = [True] * m
+    i = 0
+    p = 3
+    prime_list = [2] #add 2 as the exception
+    #this while loop is equivilent to the while loop in the first Sieve function
+    #it just looks different because the parameters are different
+    while p*p < n:
+        #if the number hasnt been crossed out we add it
         if sieve[i]:
-            prime_list += [i]
-            #this for loop is analogous to crossing out
-            #all multiples of a number in a given range
-            for j in xrange(i, n+1, i):
+            prime_list += [p]
+            #j is the multiples of p
+            j = 2*i*i + 6*i + 3 #j = (p^2-3)/2 where p = 2i+3 (see below comments)
+            #this is equivilent to the for loop in the previous Sieve fuction
+            while j < m:
                 sieve[j] = False
+                j += 2*i + 3 #p = 2i+3
+        i += 1
+        p += 2
+        #this is where the p = 2i+3
+        #p starts at 3 and is upped by 3, where i starts at 0 and is upped by 1
+    #this while loop then adds the remaining primes to the prime list
+    while i < m:
+        if sieve[i]:
+            prime_list += [p]
+        i += 1
+        p += 2
     return prime_list
 
-def isPrime(n):
-    if n <= 0:
-        return False
-    if n == 1:
-        return False
-    first_few = [      2,   3,   5,   7,  11,  13,  17,  19,  23,  29,  31,  37,  41,  43,  47,
-                      53,  59,  61,  67,  71,  73,  79,  83,  89,  97, 101, 103, 107, 109, 113,
-                     127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199]
-    if n in first_few:
-        return True
-    for i in range(2,int(n**(0.5))+1):
-        if n % i == 0:
-            return False
-    return True
+def getDigits(n):
+    return [int(d) for d in str(n)]
 
-def numDigits(n):
-    cnt = 0
-    while n != 0:
-        n /= 10
-        cnt += 1
-    return cnt
+def numberify(digits):
+    return int( "".join([str(d) for d in digits]) )
 
-def getDigit(N,n):
-    for i in range(0,n-1):
-        N /= 10
-    return N%10
+def indices_of_same_elements(L):
+    value_to_index = defaultdict(list)
+    for i, x in enumerate(L):
+        value_to_index[x].append(i)
+    return value_to_index
 
-def replaceDigit(N,d,n):
-    if numDigits(N) < n:
-        return N
-    return N - getDigit(N,n)*(10**(n-1)) + d*(10**(n-1))
+def brute_force(N):
 
-primes = Sieve(1000000)
+    sequences = []
+    primes_checked = {}
+    OoM = 1                                 # order of magnitude
+    while len(sequences) == 0:
 
-def stuff():
-    for p in primes:
-        print p
-        N = numDigits(p)
-        #i,j,k are indexes of the digits being replaced
-        #exclude frst digit bc can't be even
-        for i in range(2,N-1):
-            for j in range(i+1,N):
-                #exclude last digit bc can't start with zero
-                for k in range(j+1,N+1):
-                    cnt = 0     #counter for number of primes in the family
-                    for d in range(0,10):
-                        #so we can't replace the leftmost digit with a zero...it's just not allowed
-                        if k != N+1 and d != 0:
-                            q = replaceDigit(p,d,i)
-                            q = replaceDigit(q,d,j)
-                            q = replaceDigit(q,d,k)
-                            if isPrime(q):
-                                cnt += 1
-                            print q
-                        #a break case to make it more efficient
-                        if cnt + (10-d) < 8:
-                            break
-                    if cnt == 8:
-                        return p,i,j,k
-                    print
+        prime_list = Sieve_of_Eratosthenes(10**OoM)
+        primes_checked.update( {p : False for p in prime_list if p > 10**(OoM-1)} )
+        
+        for p in prime_list:
+            # we don't need to check these again
+            if p < 10**(OoM - 1):
+                continue
+            
+            # skipping primes that have been checked in previous iterations
+            if primes_checked[p]:
+                continue
 
-print stuff()
+            # we get the location of all repeating digits in p
+            digits = getDigits(p)
+            digit_to_index = indices_of_same_elements(digits)
+            
+            # loop through every repeated digit index
+            for d in digit_to_index:
+                seq = []
+
+                # and see if we get primes replacing them with all digits from 0-9
+                for n in range(10):
+                    q = numberify([n if i in digit_to_index[d] else x for i, x in enumerate(digits)])
+                    if q in primes_checked:
+                        primes_checked[q] = True
+                        seq.append(q)
+
+                # This does not count as a valid sequence: [07, 17, 37, 47, 67, 97]
+                # i.e. the 7 should not be included
+                # Therefore, we need to filter out anything from the sequence that used a leading 0
+                seq = list(filter(lambda x: x > 10**(OoM-1), seq))
+                
+                # now, we only care about sequences of a certain length
+                if len(seq) >= N:
+                    #sequences.append(seq)
+                    return seq              # if we only care about the smallest, we can just stop here
+        
+        # if we didn't find anything, increase the number of digits in the primes by 1
+        OoM += 1
+
+    return sequences[0]
+
+def main(N=8):
+    smallest_prime_family = brute_force(N)
+    p = min(smallest_prime_family)
+
+    print(f"The smallest prime which, by replacing part of the number (not necessarily adjacent digits) with the same digit, is part of an {N}-prime value family is:", p)
+    return p
+
+if __name__ == "__main__":
+    main()

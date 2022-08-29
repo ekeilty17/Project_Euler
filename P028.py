@@ -1,22 +1,22 @@
-#to add to a list in a spiral fashion
-def add_right(L,a):
-    for i in range(0,len(a)):
+# to add to a list in a spiral fashion
+def add_right(L, a):
+    for i in range(len(a)):
         L[i] += [a[i]]
     return L
 
-def add_bottom(L,a):
+def add_bottom(L, a):
     return L + [list(reversed(a))]
 
-def add_left(L,a):
+def add_left(L, a):
     a = list(reversed(a))
-    for i in range(0,len(a)):
+    for i in range(len(a)):
         L[i] = [a[i]] + L[i]
     return L
 
-def add_top(L,a):
+def add_top(L, a):
     return [a] + L
 
-#generates nxn spiral (n can only be odd)
+# generates nxn spiral (n can only be odd)
 def gen_spiral(n):
     if n <= 0:
         return []
@@ -24,43 +24,35 @@ def gen_spiral(n):
         return []
     if n == 1:
         return [[1]]
-    print n
+
     out = gen_spiral(n-2)
     nxt = out[0][len(out[0])-1] + 1
     
-    out = add_right(out,range(nxt,nxt+n-2))
+    out = add_right(out, list(range(nxt, nxt+n-2)))
     nxt += n-2
 
-    out = add_bottom(out,range(nxt,nxt+n-1))
+    out = add_bottom(out, list(range(nxt, nxt+n-1)))
     nxt += n-1
 
-    out = add_left(out,range(nxt,nxt+n-1))
+    out = add_left(out, list(range(nxt, nxt+n-1)))
     nxt += n-1
     
-    out = add_top(out,range(nxt,nxt+n))
+    out = add_top(out, list(range(nxt, nxt+n)))
 
     return out
 
-#sums the diagonals
-def sum_diag(L):
-    accum = 0
 
-    #top left to bottom right
-    for i in range(0,len(L)):
-        accum += L[i][i]
-
-    #bottom left to top right
-    for i in range(0,len(L)):
-        if i != len(L)//2:
-            accum += L[len(L)-i-1][i]
+def main(N=1000):
     
-    return accum
+    spiral = gen_spiral(N+1)
 
+    # summing diagonals
+    total = 0
+    total += sum([spiral[i][i] for i in range(len(spiral))])                            # top left to bottom right
+    total += sum([spiral[-i-1][i] for i in range(len(spiral)) if i != len(spiral)//2])  # bottom left to top right
 
-out = gen_spiral(1001)
+    print(f"The sum of the diagonals in a {N+1}x{N+1} prime spiral is:", total)
+    return total
 
-#for r in out:
-    #print r
-print
-s = sum_diag(out)
-print s
+if __name__ == "__main__":
+    main()

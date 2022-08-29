@@ -1,126 +1,105 @@
-def ones(n):
+ones_and_teens = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+ones_and_teens += ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"]
+tens = ["", "ten", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+hundreds  = [""] + [ones_and_teens[n] + " hundred" for n in range(1, 10)]
+
+digital_group_names = ["", "thousand", "million", "billion", "trillion"]
+
+
+def number_under_100_to_words(n):
+    if n < 0 or n > 99:
+        raise ValueError("n must be in range [1, 99] inclusive")
+    
     if n == 0:
-        return 0
-    elif n == 1:
-        return 3 #one
-    elif n == 2:
-        return 3 #two
-    elif n == 3:
-        return 5 #three
-    elif n == 4:
-        return 4 #four
-    elif n == 5:
-        return 4 #five
-    elif n == 6:
-        return 3 #six
-    elif n == 7:
-        return 5 #seven
-    elif n == 8:
-        return 5 #eight
-    elif n == 9:
-        return 4 #nine
-    else:
-        return 0
+        return "zero"
+    
+    word = ""
+    if n < 20:      # under 20 is irregular patterns
+        word += ones_and_teens[n]
+    else:           # pattern: tens-ones
+        word += tens[n // 10]
+        if n % 10 != 0:
+            word += "-" + ones_and_teens[n % 10]
+    
+    return word
 
-def teens(n):
-    if n < 10:
-        return ones(n)
-    elif n == 10:
-        return 3 #ten
-    elif n == 11:
-        return 6 #eleven
-    elif n == 12:
-        return 6 #twelve
-    elif n == 13:
-        return 8 #thirteen
-    elif n == 14:
-        return 8 #fourteen
-    elif n == 15:
-        return 7 #fifteen
-    elif n == 16:
-        return 7 #sixteen
-    elif n == 17:
-        return 9 #seventeen
-    elif n == 18:
-        return 8 #eighteen
-    elif n == 19:
-        return 8 #nineteen
-    else:
-        return 0
 
-def tens(n):
-    if n == 0:
-        return 0 #zero
-    elif n == 10:
-        return 3 #ten
-    elif n == 20:
-        return 6 #twenty
-    elif n == 30:
-        return 6 #thirty
-    elif n == 40:
-        return 5 #forty
-    elif n == 50:
-        return 5 #fifty
-    elif n == 60:
-        return 5 #sixty
-    elif n == 70:
-        return 7 #seventy
-    elif n == 80:
-        return 6 #eighty
-    elif n == 90:
-        return 6 #ninety
-    else:
-        return 0
+def triple_to_words(n, last=False):
+    if n > 999:
+        raise ValueError("number must be less than 1000")
+    
+    # hundreds place
+    word = hundreds[n // 100]
+    
+    # if n is a perfect multiple of 100, we are done
+    if n % 100 == 0:
+        return word
+    
+    # last means the last triple in the word
+    # if we have other stuff after the 100's place, then we need an "and"
+    if last or n // 100 != 0:
+        word += " and "
+    
+    # now we just deal with everything under 100
+    word += number_under_100_to_words(n % 100)
+    return word
 
-def hundreds(n):
-    if n % 100 != 0 or n == 0:
-        return 0
-    n /= 100
-    return ones(n) + 7 #hundred
 
-def thousands(n):
-    if n % 1000 != 0 or n == 0:
-        return 0
-    n /= 1000
-    return ones(n) + 8 #thousand
+def parse_into_digit_groups(n):
+    if n < 1000:
+        return [n]
+    
+    digital_groups = []
+    s = str(n)
+    for i in range(len(s)-3, 0, -3):
+        digital_groups.append( int(s[i:i+3]) )
+    
+    if 3*len(digital_groups) != len(s):
+        diff = len(s) - 3*len(digital_groups)
+        digital_groups.append( int(s[:diff]) )
+    
+    return list(reversed(digital_groups))
 
-def Letters(n):
-    count = 0
-    if n >= 10000:
-        return 0
-    if n == 0:
-        return 4 #zero
+def number_to_words(n):
+    word = ""
     if n < 0:
-        n *= 1
-        count += 8 #negative
-    if n < 20:
-        return count + teens(n)
-    #splitting up n into its digits
-    digits = []
-    digits += [(n/1000)*1000]
-    n = n % 1000
-    digits += [(n/100)*100]
-    n = n % 100
-    digits += [n]
-    
-    count += thousands(digits[0])
-    count += hundreds(digits[1])
-    if digits[2] < 20:
-        count += teens(digits[2])
-    else:
-        digits[2] = (n/10)*10
-        n = n % 10
-        digits += [n]
-        count += tens(digits[2])
-        count += ones(digits[3])
+        word += "negative "
+        n *= -1
 
-    if (digits[0] != 0 or digits[1] != 0) and (digits[2] != 0):
-        count += 3 #and
-    
-    return count
+    limit = 10**(len(digital_group_names)*3)
+    if n >= limit:
+        raise NotImplementedError(f"Haven't implemented larger than {limit}")
 
-accum = 0
-for i in range(1,1001):
-    print i
-    accum += Letters(i)
-print accum
+    # less than 100 has edge cases with "and"
+    if n < 100:
+        return number_under_100_to_words(n % 100)
+
+    digital_groups = parse_into_digit_groups(n)
+    group_index = len(digital_groups)-1
+
+    word = ""
+    for triple in digital_groups[:-1]:
+        if triple != 0:
+            word += triple_to_words(triple) + " " + digital_group_names[group_index] + " "
+        group_index -= 1
+    
+    # the last triple has edge cases with "and"
+    if digital_groups[-1] != 0:
+        word += triple_to_words(digital_groups[-1], last=True)
+
+    return word
+
+def main(N=1000):
+    total = 0
+    for n in range(1, N+1):
+        word = number_to_words(n)
+        #print(n, word)
+        letters_only = word.replace(" ", "").replace("-", "")
+        total += len(letters_only)
+    
+    print(f"Number of letters used in writing 1 to {N} in English:", total)
+    return total
+
+
+if __name__ == "__main__":
+    main()

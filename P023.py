@@ -1,53 +1,67 @@
-#needed to make the divisor function a bit more efficient
-def divisors(n):
-    if n <= 0:
+from itertools import chain, combinations
+import math
+
+# integer factorization by Trial Division
+def Prime_Factors(n):
+    # Error Check
+    if type(n) != int and type(n) != long:
+        raise TypeError('must be integer')
+    if n < 2:
         return []
+    factors = []
+    # as always, take care of the 2s first bc they are easy
+    while n % 2 == 0:
+        factors += [2]
+        n =  n // 2
+    # if n was purely a power of 2, then the function ends here
     if n == 1:
-        return []
-    if n == 2:
-        return [1]
-    f = [1]
-    upper_limit = n
-    i = 2
-    while i < upper_limit:
-        if n%i == 0:
-            if i == n/i:
-                f += [i]
-            else:
-                f += [i, n/i]
-            upper_limit = n/i
-        i += 1
-    print n
+        return factors
+    # since we got rid of the 2's potential factors, f can start at 3
+    # other than that, this loop is pretty self explainitory
+    f = 3
+    while f*f <= n:
+        if n % f == 0:
+            factors += [f]
+            n = n // f
+        else:
+            f += 2
+    return factors + [n]
+
+def powerset(L, include_self=True):
+    n = len(L)
+    if include_self:
+        n += 1
+    return chain.from_iterable(combinations(L, r) for r in range(n))
+
+def factors(n):
+    prime_factors = Prime_Factors(n)
+    f = set()
+    for subset in powerset(prime_factors, include_self=False):
+        f.add(math.prod(subset))
     return f
 
 def isAbundant(n):
-    if sum(divisors(n)) > n:
+    if sum(factors(n)) > n:
         return True
     return False
 
-n = 30000
-abundant = []
-abun_sums = [0]*n
+def main():
+    upper_bound = 28123
+    abundant = [n for n in range(0, upper_bound+1) if isAbundant(n)]
 
-for i in range(0,n):
-    if isAbundant(i):
-        abundant += [i]
+    abundant_sums = [False] * (upper_bound + 1)
+    
+    for i in range(len(abundant)):
+        a = abundant[i]
+        for j in range(i, len(abundant)):
+            b = abundant[j]
+            if a + b > upper_bound:
+                break
+            abundant_sums[a + b] = True
 
-#in order to find the numbers that cannot be written as the sum of two abundant numbers, I am initializing a list with 0's and if two abundant numbers sum to a number, I insert that number at that index
-for a in range(0,len(abundant)):
-    for b in range(a,len(abundant)):
-        if abundant[a] + abundant[b] >= n:
-            break
-        abun_sums[abundant[a] + abundant[b]] = abundant[a] + abundant[b]
+    total = sum([i for i in range(len(abundant_sums)) if not abundant_sums[i]])
+    print(f"The sum of all the positive integers which cannot be written as the sum of two abundant numbers:", total)
+    return total
 
-#then all I have to do is sum the gaps, i.e. all the indeces that contain a 0
-accum = 0
-for i in range(0,len(abun_sums)):
-    if abun_sums[i] == 0:
-        accum += i
-
-print abundant
-print
-print abun_sums
-print
-print accum
+if __name__ == "__main__":
+    main()

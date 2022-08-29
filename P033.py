@@ -1,47 +1,19 @@
-def get_ones(n):
-    if n < 10 or n > 99:
-        return -1
-    return n%10
+def digit_cancelling_fractions():
+    fracts = set()
+    denominator = 2
+    while len(fracts) < 4:
+        for numerator in range(1, denominator):
+            for x in range(1, 10):
+                for i in range(len(str(numerator))+1):
+                    for j in range(len(str(denominator))+1):
+                        n = int(str(numerator)[:i] + str(x) + str(numerator)[i:])
+                        d = int(str(denominator)[:j] + str(x) + str(denominator)[j:])
+                        if numerator/denominator == n/d:
+                            fracts.add((n, d))
+        denominator += 1
+    return fracts
 
-def get_tens(n):
-    if n < 10 or n > 99:
-        return -1
-    return n/10
-
-def rm_ones(n):
-    if n < 10 or n > 99:
-        return -1
-    return n/10
-
-def rm_tens(n):
-    if n < 10 or n > 99:
-        return -1
-    return n%10
-
-#getting fractions
-fracts = []
-for numer in range(11,50):
-    for denom in range(numer+1,100):
-        if numer%10 != 0 and denom%10 != 0:
-            if numer/float(denom) == rm_ones(numer)/float(rm_ones(denom)) and get_ones(numer) == get_ones(denom):
-                fracts += [[numer,denom]]
-            elif numer/float(denom) == rm_tens(numer)/float(rm_ones(denom)) and get_tens(numer) == get_tens(denom):
-                fracts += [[numer,denom]]
-            elif numer/float(denom) == rm_ones(numer)/float(rm_tens(denom)) and get_ones(numer) == get_tens(denom):
-                fracts += [[numer,denom]]
-            elif numer/float(denom) == rm_tens(numer)/float(rm_tens(denom)) and get_tens(numer) == get_tens(denom):
-                fracts += [[numer,denom]]
-
-print fracts
-
-#multiplying them
-numerator = 1
-denominator = 1
-for f in fracts:
-    numerator *= f[0]
-    denominator *= f[1]
-
-#finding GCF using Euliers Method
+# finding GCF using Euliers Method
 def gcd(a,b):
     if b > a:
         return gcd(b, a)
@@ -49,7 +21,24 @@ def gcd(a,b):
         return b
     return gcd(b, a%b)
 
-div = gcd(numerator,denominator)
+def main():
+    
+    fractions = digit_cancelling_fractions()
+    #print(fractions)
 
-print numerator, denominator
-print numerator/div, denominator/div
+    # multiplying them 
+    numerator = denominator = 1
+    for n, d in fractions:
+        numerator   *= n
+        denominator *= d
+    
+    # Simplifying to lowest terms
+    divisor = gcd(numerator, denominator)
+    numerator   = numerator   // divisor
+    denominator = denominator // divisor
+
+    print(f"The denominator of the product of all digit cancelling fractions less than 1 in lowest terms is:", denominator)
+    return denominator
+
+if __name__ == "__main__":
+    main()

@@ -1,61 +1,51 @@
 def sumDigits(n):
-    accum = 0
-    while n != 0:
-        accum += n%10
-        n /= 10
-    return accum
+    return sum([int(d) for d in str(n)])
 
 def gcd(a, b):
     if b > a:
-        a, b = b, a
-    while b != 0:
-        a, b = b, a%b
-    return a
+        return gcd(b, a)
+    if a % b == 0:
+        return b
+    return gcd(b, a%b)
 
-#takes a list and produces the continued fraction
-def ContinuedFraction_dec(L):
-    accum = L[-1]
-    for i in range(len(L)-2,-1,-1):
-        accum = L[i] + 1/float(accum)
-    return accum
+def eContinuedFraction(n):
+    continued_fraction = [2]
+    for k in range(1, (n//3)+2):
+        continued_fraction += [1, 2*k, 1]
+    
+    extra = 3 - (n%3)
+    continued_fraction = continued_fraction[:-extra-1]
 
+    return continued_fraction
 
-def ContinuedFraction_frac(L):
-    #accum = [a,b] where e ~ a/b
-    accum = [L[-1], 1]
-    for i in range(len(L)-2,-1,-1):
-        a = accum[0]
-        b = accum[1]
-        accum[0] = L[i]*a + b
-        accum[1] = a
-        #you actually don't need this bc they will always be relatively prime
-        #g = gcd(accum[0],accum[1])
-        #accum[0] /= g
-        #accum[1] /= g
-    return accum
+def calculateTruncatedFraction(continued_fraction):
 
-def gen_e_list(n):
-    out = []
-    for i in range(1,(n//3)+2):
-        out += [1,2*i,1]
-    if n%3 == 2:
-        out = out[:-1]
-    elif n%3 == 1:
-        out = out[:-2]
-    else:
-        out = out[:-3]
-    return [2] + out
+    # let the fraction be represented by a/b
+    # when we iterate to the next fraction, we will have
+    #   n + 1/(a/b) = (an + b)/a
+    # Therefore,
+    #   a' = an + b
+    #   b' = a
+    
+    a, b = 1, 0
+    for n in reversed(continued_fraction):
+        a, b = a*n + b, a
+    
+    # you actually don't need this because they will always be relatively prime
+    #g = gcd(a, b)
+    #a = a // g
+    #b = b // g
 
-def e_approx_dec(n):
-    return ContinuedFraction_dec(gen_e_list(n))
+    return a, b
 
-def e_approx_frac(n):
-    return ContinuedFraction_frac(gen_e_list(n))
+def main(N=100):
 
+    e_continued_fraction = eContinuedFraction(N)
+    numerator, denominator = calculateTruncatedFraction(e_continued_fraction)
+    
+    total = sumDigits(numerator)
+    print(f"The sum of digits in the numerator of the {N} continued fraction for e is:", total)
+    return total
 
-n = 100
-print gen_e_list(n-1)
-L = e_approx_frac(n-1)
-print L
-print L[0]/float(L[1])
-print sumDigits(L[0])
+if __name__ == "__main__":
+    main()

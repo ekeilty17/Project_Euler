@@ -1,55 +1,50 @@
+import math
+
 def Triangle(n):
-   return n*(n+1)/2
+    return (n*(n+1)) // 2
+
+# See P042.py for the math behind this
+def isTriangle(x):
+    n = (-1 + math.sqrt(8*x+1))/2
+    return x == Triangle(math.floor(n)) or x == Triangle(math.ceil(n))
+
 
 def Pentagon(n):
-    return n*(3*n-1)/2
+    return (n*(3*n-1)) // 2
+
+# See P044.py for the math behind this
+def isPentagon(x):
+    n = (1 + math.sqrt(24*x + 1)) / 6
+    return x == Pentagon(math.floor(n)) or x == Pentagon(math.ceil(n))
+
 
 def Hexagon(n):
     return n*(2*n-1)
 
-def Pen_inv(x):
-    return (1 + (24*x+1)**(0.5))/6
+# n * (2*n - 1) = x
+# 2n^2 - n = x
+# n^2 - 1/2 * n = x/2
+# (n - 1/4)^2 = x/2 + 1/16
+# n = 1/4 + sqrt(x/2 + 1/16)
+# N = (1 + sqrt(8x + 1)) / 4
 
-def Hex_inv(x):
-    return (1 + (8*x+1)**(0.5))/4
+def isHexagon(x):
+    n = (1 + math.sqrt(8*x + 1)) / 4
+    return x == Hexagon(math.floor(n)) or x == Hexagon(math.ceil(n))
 
-def isInt(n):
-    if n == int(n):
-        return True
-    return False
+def main(N=3):
 
-#this brute forces it, but it takes too long
-"""
-#T_n = 285
-#P_n = 165
-#H_n = 143
-T_n = 1
-P_n = 1
-H_n = 1
-found = False
+    TPH_numbers = []
+    Tn = 0
+    
+    while len(TPH_numbers) < N:
+        Tn += 1
+        x = Triangle(Tn)
+        if isPentagon(x) and isHexagon(x):
+            TPH_numbers.append( x )
+    
+    print(f"The next triangle number that is also pentagonal and hexagonal is:", TPH_numbers[-1])
+    return TPH_numbers[-1]
 
-while not found:
-    T_n += 285
-    P_n = 165
-    H_n = 143
-    while Pentagon(P_n) <= Triangle(T_n):
-        H_n = 143
-        while Hexagon(H_n) <= Pentagon(P_n):
-            print Triangle(T_n), Pentagon(P_n), Hexagon(H_n)
-            if Triangle(T_n) == Pentagon(P_n) == Hexagon(H_n):
-                found = True
-                break
-            H_n += 1
-        P_n += 1
-"""
-
-T_n = 286
-found = False
-while not found:
-    x = Triangle(T_n)
-    print x
-    if isInt(Pen_inv(x)) and isInt(Hex_inv(x)):
-        print
-        print x
-        break
-    T_n += 1
+if __name__ == "__main__":
+    main()

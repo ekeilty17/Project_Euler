@@ -1,34 +1,24 @@
-def numDigits(n):
-    cnt = 0
-    while n != 0:
-        n /= 10
-        cnt += 1
-    return cnt
+def getDigits(n):
+    return [int(d) for d in str(n)]
 
-def getDigitList(n):
-    out = []
-    while n != 0:
-        out = [n%10] + out
-        n /= 10
-    return out
+def main():
 
-def concat(L):
-    accum = 0
-    for i in range(0,len(L)):
-        accum *= 10
-        accum += L[i]
-    return accum
+    x_max = []
+    for x in range(1, 10**5):       # since n > 1, we must be concatenating at least one 4-digit and one 5-digit number
+        digits = []
+        for n in range(1, 10):
+            digits += getDigits(n*x)
+            if list(sorted(digits)) == list(range(1, 10)):
+                x_max = digits
+                break
+            elif len(digits) > 10:
+                break
 
-mx = []
-for n in range(1,10000):
-    dig = []
-    for i in range(1,10):
-        dig += getDigitList(i*n)
-        if list(sorted(dig)) == [1,2,3,4,5,6,7,8,9]:
-            print dig, n
-            mx = dig
-            break
+    x_max = "".join([str(d) for d in x_max])
 
-print
-print mx
-print concat(mx)
+    print(f"The largest pandigital 9-digit number that can be formed as the concatenatation of consecutive integer products is:", x_max)
+    return x_max
+    
+
+if __name__ == "__main__":
+    main()

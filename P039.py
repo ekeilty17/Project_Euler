@@ -1,55 +1,33 @@
 import math
+from collections import defaultdict
 
-def isInt(n):
-    if n == int(n):
-        return True
-    else:
-        return False
+def get_pythagorean_triples_under_perimeter(P):
+    # P is the maximum perimeter length
+    perfect_squares = set([x**2 for x in range(1, P)])
 
-def Pyth(a,b):
-    return math.sqrt(a*a + b*b)
+    triples = set()
+    for a in range(1, P//2+1):
+        for b in range(a, P//2+1):
+            c_2 = a**2 + b**2                   # pythagorean theorem
+            if c_2 in perfect_squares:          # if c**2 is a perfect square
+                c = int(math.sqrt(c_2))
+                if a+b+c <= 1000:
+                    triples.add( (a, b, c) )
 
-a = 1
-b = 1
-P = []
-while a < 500:
-    #this is so I don't double count
-    if a < b:
-        c = Pyth(a,b)
-        if isInt(c):
-            if a+b+c <= 1000:
-                P += [a+b+c]
-                print a,b,c
-    if b == 500:
-        a += 1
-        b = 1
-    else:
-        b += 1
+    return triples
 
-print
-print P
+def main(N=1000):
 
-#idk let's make a sorting algorithm for fun
-for i in range(0,len(P)-1):
-    for j in range(0,len(P)-1-i):
-        if P[j+1] < P[j]:
-            temp = P[j]
-            P[j] = P[j+1]
-            P[j+1] = temp
-
-print
-print P
-
-most = 0
-counter = 0
-max_P = 0
-for i in range(0,len(P)-1):
-    if P[i] == P[i+1]:
-        counter += 1
-        if counter > most:
-            most = counter
-            max_P = P[i]
-    else:
-        counter = 0
-
-print max_P
+    triples = get_pythagorean_triples_under_perimeter(N)
+    #triples = list(sorted(triples, key=lambda t: sum(t)))
+    
+    D = defaultdict(list)
+    for a, b, c in triples:
+        D[a+b+c].append( (a, b, c) )
+    
+    p_max, p_max_triples = max(D.items(), key=lambda t: len(t[1]))
+    print(f"The perimeter of a right angle triangle, p <= {N}, with the maximum number of integer triples is:", p_max)
+    return p_max
+    
+if __name__ == "__main__":
+    main()

@@ -1,168 +1,186 @@
-def Sieve(n):
-    #Error Check
-    if type(n) != int and type(n) != long:
-        raise TypeError("must be integer")
-    if n < 2:
-        raise ValueError("must be greater than one")
-    sieve = [True] * (n+1)
-    prime_list = []
-    for i in xrange(2,n+1):
-        if sieve[i]:
-            prime_list += [i]
-            #this for loop is analogous to crossing out
-            #all multiples of a number in a given range
-            for j in xrange(i, n+1, i):
-                sieve[j] = False
-    return prime_list
+import itertools
 
 def isPrime(n):
     if n <= 0:
         return False
     if n == 1:
         return False
-    first_few = [      2,   3,   5,   7,  11,  13,  17,  19,  23,  29,  31,  37,  41,  43,  47,
-                      53,  59,  61,  67,  71,  73,  79,  83,  89,  97, 101, 103, 107, 109, 113,
-                     127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199]
-    if n in first_few:
+    prime_list = [  2,   3,   5,   7,   11,  13,  17,  19,  23,  29,  31,  37,  41,  43,  47,
+                    3,   59,  61,  67,  71,  73,  79,  83,  89,  97,  101, 103, 107, 109, 113,
+                    127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199]
+    if n in prime_list:
         return True
-    for i in range(2,int(n**(0.5))+1):
+    for i in range(2, int(n**(0.5))+1):
         if n % i == 0:
             return False
     return True
 
-def concat(a,b):
+def Sieve_of_Eratosthenes(n):
+    #Error Check
+    if type(n) != int and type(n) != long:
+        raise TypeError("must be integer")
+    if n < 2:
+        raise ValueError("must be greater than one")
+    m = (n-1) // 2 #list only needs to be half as long bc we dont care about even numbers
+    sieve = [True] * m
+    i = 0
+    p = 3
+    prime_list = [2] #add 2 as the exception
+    #this while loop is equivilent to the while loop in the first Sieve function
+    #it just looks different because the parameters are different
+    while p*p < n:
+        #if the number hasnt been crossed out we add it
+        if sieve[i]:
+            prime_list += [p]
+            #j is the multiples of p
+            j = 2*i*i + 6*i + 3 #j = (p^2-3)/2 where p = 2i+3 (see below comments)
+            #this is equivilent to the for loop in the previous Sieve fuction
+            while j < m:
+                sieve[j] = False
+                j += 2*i + 3 #p = 2i+3
+        i += 1
+        p += 2
+        #this is where the p = 2i+3
+        #p starts at 3 and is upped by 3, where i starts at 0 and is upped by 1
+    #this while loop then adds the remaining primes to the prime list
+    while i < m:
+        if sieve[i]:
+            prime_list += [p]
+        i += 1
+        p += 2
+    return prime_list
+
+
+def concat(a, b):
     return int(str(a) + str(b))
 
-def all_concat(L):
-    out = []
-    for i in range(0,len(L)-1):
-        for j in range(i+1,len(L)):
-            out += [concat(L[i], L[j]), concat(L[j], L[i])]
-    return out
+def isPairwiseConcatenatingPrimes(p, q):
+    return isPrime(concat(p, q)) and isPrime(concat(q, p))
 
-primes = Sieve(10000)
+def find_pairs(p, prime_list):
+    p_pairs = set([])
+    for q in prime_list:
+        if isPairwiseConcatenatingPrimes(p, q):
+            p_pairs.add(q)
+    return p_pairs
 
-#so this brute forces it, but we can be more clever than this
-#say a and b do not concatinate to a prime, then we can discount iterations c, d, and e bc they will never be solutions
-"""
-def stuff():
-    #know it can't start at 2
-    for a in range(1,len(primes)-4):
-        for b in range(a+1,len(primes)-3):
-            for c in range(b+1,len(primes)-2):
-                for d in range(c+1,len(primes)-1):
-                    for e in range(d+1,len(primes)):
-                        print primes[a],primes[b],primes[c],primes[d],primes[e]
-                        L = all_concat([primes[a],primes[b],primes[c],primes[d],primes[e]])
-                        cnt = 0
-                        for p in L:
-                            if isPrime(p):
-                                cnt += 1
-                            else:
-                                break
-                        if cnt == len(L):
-                            return [primes[a],primes[b],primes[c],primes[d],primes[e]]
-"""
 
-#This is still kinda slow but idk how to make it faster
-def all_prime(L):
-    for p in L:
-        if not isPrime(p):
-            return False
-    return True
-
-def stuff():
-    #know it can't start at 2
-    for a in range(1,len(primes)-4):
-        for b in range(a+1,len(primes)-3):
-            for c in range(b+1,len(primes)-2):
-                if not all_prime(all_concat([primes[a],primes[b]])):
-                    break
-                for d in range(c+1,len(primes)-1):
-                    if not all_prime(all_concat([primes[a],primes[b],primes[c]])):
-                        break
-                    for e in range(d+1,len(primes)):
-                        if not all_prime(all_concat([primes[a],primes[b],primes[c],primes[d]])):
-                            break
-                        print primes[a],primes[b],primes[c],primes[d],primes[e]
-                        if all_prime(all_concat([primes[a],primes[b],primes[c],primes[d],primes[e]])):
-                            return [primes[a],primes[b],primes[c],primes[d],primes[e]]
-
-    return []
-L = stuff()
-print L
-print sum(L)
-
-#old attempt
-"""
-#Let's try to find a number by just adding it to the original list
-#original list: 3, 7, 109, 673
-
-#you know right away it can't be 2, 3, 5, or 7 just from the original list
-candidate = 7 #this is the 4th prime
-n = 4
-
-all_prime = False
-while all_prime == False and candidate < 1000:
+def brute_force(N):
+    prime_list = Sieve_of_Eratosthenes(30000)           # we choose 30,000 because the algorithm will show that 
+                                                        # 26,033 is the minimum sum, we so we can know no other smallest sum exists
     
-    candidate = nthPrime(n+1)
-    n += 1
-    
-    #make a list of every concatination
-    concat_list = [ concat(3,candidate), concat(candidate,3),
-                    concat(7,candidate), concat(candidate,7),
-                    concat(109,candidate), concat(candidate,109),
-                    concat(673,candidate), concat(candidate,673)
-                  ]
+    smallest_sum_set = tuple( [prime_list[-1]] * N )
+    smallest_sum = sum(smallest_sum_set)
+    pairs = [None] * len(prime_list)
 
-    for c in concat_list:
-        all_prime = True
-        if isPrime(c) == False:
-            all_prime = False
-            break
-
-print "next prime in the set is",candidate
-accum = 3+7+109+673+candidate
-print "lowest sum in the set",accum
-#turns out this isn't the lowest sum
-"""
-
-"""
-a = 13
-b = 13
-c = 13
-d = 13
-e = 13
-
-p_set = [a,b,c,d,e]
-
-n_a = 6
-n_b = 6
-n_c = 6
-n_d = 6
-n_e = 6
-
-n_set = [n_a,n_b,n_c,n_d,n_e]
-
-for i in range(0,len(p_set)-1):
-    all_prime = False
-    while all_prime == False and p_set[i+1] < 10000:
+    i = 0
+    candidate_set = []
+    indices = []
+    while True:
+        # successfully found concatenating pairwise prime set
+        if len(candidate_set) == N:
+            if sum(candidate_set) < sum(smallest_sum_set):
+                smallest_sum_set = list(sorted(candidate_set))
+                smallest_sum = sum(smallest_sum_set)
+                indices = indices[:-1]
+                candidate_set = candidate_set[:-1]
         
-        for j in range(i+1,len(p_set)):
-            p_set[j] = nthPrime(n_set[j]+1)
-            n_set[j] += 1
-    
-        #make a list of every concatination
-        concat_list = []
-        for j in range(0,len(p_set)-1):
-            concat_list += [ concat(p_set[j],p_set[j+1]) ]
-            concat_list += [ concat(p_set[j+1],p_set[j]) ]
-
-        for p in concat_list:
-            all_prime = True
-            if isPrime(p) == False:
-                all_prime = False
+        # base-case, we ran out of primes
+        if i >= len(prime_list):
+            if len(candidate_set) == 0:
+                # we failed to find a set of size N
                 break
+            
+            i = indices[-1] + 1
+            indices = indices[:-1]
+            candidate_set = candidate_set[:-1]
+            # we need to continue so we check i again
+            continue
 
-print p_set
-"""
+        #print(*candidate_set, prime_list[i])
+
+        # pruning steps
+        #   since we are iterating in numerical order
+        #   if adding the next smallest primes results in a larger sum, we can stop searching
+        diff = N - len(candidate_set)
+        if sum(candidate_set) + prime_list[i] * diff > smallest_sum:
+            if len(candidate_set) == 0:
+                break
+            else:
+                i = indices[-1] + 1
+                indices = indices[:-1]
+                candidate_set = candidate_set[:-1]
+                continue
+        
+        p = prime_list[i]
+        for j, q in zip(indices, candidate_set):
+            if not (p in pairs[j]):
+                break
+        else:
+            # only executes if we don't break, i.e. we can add p to the candidate set
+            #   Now we calculate all possible pairwise concatenating primes and store it so we don't have to do it again later
+            if pairs[i] is None:
+                pairs[i] = find_pairs(prime_list[i], prime_list[i+1:])
+            # if there aren't enough pairs, then we don't have to look any farther
+            if len(pairs[i]) >= diff:
+                candidate_set.append(p)
+                indices.append(i)
+        
+        i += 1
+
+    return tuple(sorted(smallest_sum_set))
+
+
+# This is a bit slow, but it gives the correct answer. And I think it's just because I've coded this is python instead of C
+# it's instantaneous for N<5, but takes about a 2 minutes for N=5
+# this is an improvement over the brute force, which I have never seen finish for N=5
+# so I am going to take it
+def constructive(N):
+
+    OoM = 1
+    prime_list = Sieve_of_Eratosthenes(10**OoM)
+    prime_set = [tuple([p]) for p in prime_list]
+
+    # we iteratively build up the solution
+    n = 2
+    while n < N+1:
+        n_wise = set([])
+        
+        # we take two prime sets of length n-1 and if they contain n-2 elements in common, we can construct a new list of size n
+        for P, Q in itertools.combinations(prime_set, 2):
+            # pruning combinations
+            A, B = set(P), set(Q)
+            if len(A.intersection(B)) != n-2:
+                continue
+            
+            # if the two that are not in common pair-wise concatenating prime, then the union of the set are also
+            p = (A - B).pop()
+            q = (B - A).pop()
+            if isPairwiseConcatenatingPrimes(p, q):
+                n_wise.add( tuple(sorted(A.union(B))) )
+        
+        if len(n_wise) == 0:
+            # we keep increasing the number of primes we consider until we get the answer
+            OoM += 1
+            prime_list = Sieve_of_Eratosthenes(10**OoM)
+            prime_set = [tuple([p]) for p in prime_list]
+            n = 2
+        else:
+            # otherwise we continue and iterate forward
+            prime_set = n_wise
+            n += 1
+
+    return min(prime_set, key=lambda S: sum(S))
+
+
+def main(N=5):
+
+    #minimum_pairwise_concatenating_primes = brute_force(N)
+    minimum_pairwise_concatenating_primes = constructive(N)
+    print(minimum_pairwise_concatenating_primes)
+
+    print(f"The lowest sum for a set of {N} primes for which any two primes concatenate to produce another prime is:", sum(minimum_pairwise_concatenating_primes))
+    return sum(minimum_pairwise_concatenating_primes)
+
+if __name__ == "__main__":
+    main()

@@ -1,50 +1,12 @@
-#a function that will generate all lexicographic permutations for a given number
-"""
-def lex(n):
-    if n == 0:
-        return [[0]]
-    if n == 1:
-        return [[0, 1], [1, 0]]
-    n_1 = lex(n-1)
-    out = []
-    for sL in n_1:
-        for i in range(len(sL),-1,-1):
-            out += [ sL[0:i] + [n] + sL[i:] ]
-    return out
+from itertools import permutations
 
-#brute force
-Lex_9 = sorted(lex(9))
-print Lex_9[999999]
-"""
+# This is fast because how python implemented it, but it's cheating
+def cheating(N, i):
+    all_lex = list(sorted(permutations(range(N))))
+    perm = all_lex[k-1]
+    return "".join([str(x) for x in perm])
 
-#this one lends itself to thinking mathematically a bit before
-#rather than a strictly brute force approach
 
-#permutation 0987654321 is permutation 1*9! = 362,880
-#permutation 1987654320 is permutation 2*9! = 725,760
-#permutation 2987654310 is permutation 3*9! = 1,088,640
-
-#so the 1 millionth permutation begins with a 2
-
-#perm 725,760 = 1987654320
-#perm 725,761 = 2013456789
-#1,000,000 - 725,760 = 274,240
-#need to find the 274,240th lexicographic permutation of digits
-#       0, 1, 3, 4, 5, 6, 7, 8, 9
-
-"""
-Lex_8 = sorted(lex(8))
-perm_8d_274240 = Lex_8[274240 - 1]
-
-for i in range(len(perm_8d_274240)):
-    if perm_8d_274240[i] > 1:
-        perm_8d_274240[i] += 1
-
-perm_9d_1000000 = [2] + perm_8d_274240
-print perm_9d_1000000
-"""
-
-#Continuing to use this logic to deduce the solution
 def factorial(n):
     if n <= 0:
         return 1
@@ -52,19 +14,38 @@ def factorial(n):
         return 1
     return n*factorial(n-1)
 
-n = 1000000
+# Here's the idea
 
-nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-out = []
-for i in range(9,0,-1):
-    f = factorial(i)
-    i = 1
-    while i*f < n:
-        i += 1
-    out += [nums[i-1]]
-    del nums[i-1]
-    n -= (i-1)*f
+# Observe
+#   permutations 0123456789 to 0987654321 are index 0*9! to 1*9!-1 = [0,      362879 ]
+#   permutations 1234567890 to 1987654320 are index 1*9! to 2*9!-1 = [362880, 725759 ]
+#   permutations 2345678901 to 2987654310 are index 2*9! to 3*9!-1 = [725760, 1088639]
+# Therefore, the 1 millionth permutation begins with a 2
 
-out += nums
+# So we can keep narrowing down this range through this exact same logic
 
-print out
+def logical(N, k):
+
+    nums = list(range(N))
+    perm = []
+    for i in reversed(range(N)):
+        f = factorial(i)
+        c = (k-1) // f
+        perm += [nums[c]]
+        del nums[c]
+        k -= c*f
+
+    return "".join([str(x) for x in perm])
+
+def main(N=10, k=10**6):
+    if k > factorial(N):
+        raise ValueError(f"index cannot be larger than {N}!")
+    
+    #perm = cheating(N, k)
+    perm = logical(N, k)
+
+    print(f"The {N} lexicographic permutation of the digits 0, 1, 2, 3, 4, 5, 6, 7, 8, and 9 is:", perm)
+    return perm
+
+if __name__ == "__main__":
+    main()

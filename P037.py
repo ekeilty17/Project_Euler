@@ -3,10 +3,10 @@ def isPrime(n):
         return False
     if n == 1:
         return False
-    first_few = [      2,   3,   5,   7,  11,  13,  17,  19,  23,  29,  31,  37,  41,  43,  47,
-                      53,  59,  61,  67,  71,  73,  79,  83,  89,  97, 101, 103, 107, 109, 113,
-                     127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199]
-    if n in first_few:
+    prime_list = [  2,   3,   5,   7,   11,  13,  17,  19,  23,  29,  31,  37,  41,  43,  47,
+                    3,   59,  61,  67,  71,  73,  79,  83,  89,  97,  101, 103, 107, 109, 113,
+                    127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199]
+    if n in prime_list:
         return True
     for i in range(2,int(n**(0.5))+1):
         if n % i == 0:
@@ -14,17 +14,13 @@ def isPrime(n):
     return True
 
 def numDigits(n):
-    cnt = 0
-    while n != 0:
-        n /= 10
-        cnt += 1
-    return cnt
+    return len(str(n))
 
 def rm_left(n):
     return n % (10**(numDigits(n)-1))
 
 def rm_right(n):
-    return n/10
+    return n//10
 
 def isTruncatable_left(p):
     while p != 0:
@@ -40,26 +36,56 @@ def isTruncatable_right(p):
         p = rm_right(p)
     return True
 
-cnt = 0
-p = 11
-trun = []
-while cnt < 11:
-    #to limit the search:
-    #the right-most digit cannot be equal to [0, 1, 2, 4, 5, 6, 8, 9]
-    #the left-most digit cannot be equal to [1, 4, 6, 8, 9] 
-    if p%2 != 0 and p%10 != 1 and p%10 != 5 and p%10 != 9 and (p/(10**(numDigits(p)-1))) not in [0,1,4,6,8,9]:
-        if isTruncatable_left(p) and isTruncatable_right(p):
-            print p
-            trun += [p]
-            cnt += 1
-            #this is if you only wanted to include the largest version of the truncatable number
-            """
-            for i in range(0,len(trun)-1):
-                if trun[i] == rm_left(p) or trun[i] == rm_right(p):
-                    del trun[i]
-                    break
-            """
-    p += 1
 
-print trun
-print sum(trun)
+# The brute force approach actually isn't that bad, mostly because in the isPrime function we have the first 200 primes stored
+def brute_force():
+    dual_truncatable_primes = []
+    p = 10
+    while len(dual_truncatable_primes) < 11:            # the problem tells us that there are exactly 11 such primes
+        if isTruncatable_left(p) and isTruncatable_right(p):
+            #print(p)
+            dual_truncatable_primes.append(p)
+
+        p += 1
+    
+    return dual_truncatable_primes
+
+
+# But theoretically, this is a much better algorithm
+def dynamic_programming():
+    #                       0       1     2     3      4     5      6      7     8      9
+    is_left_truncatable = [False, False, True, True, False, True, False, True, False, False]
+    is_right_truncatable = list(is_left_truncatable)
+
+    dual_truncatable_primes = []
+    p = 10
+    while len(dual_truncatable_primes) < 11:            # the problem tells us that there are exactly 11 such primes
+        if isPrime(p):
+            left_truncatable = is_left_truncatable[rm_left(p)]
+            is_left_truncatable.append(left_truncatable)
+
+            right_truncatable = is_right_truncatable[rm_right(p)]
+            is_right_truncatable.append(right_truncatable)
+
+            if left_truncatable and right_truncatable:
+                #print(p)
+                dual_truncatable_primes.append(p)
+        else:
+            is_left_truncatable.append(False)
+            is_right_truncatable.append(False)
+        
+        p += 1
+    
+    return dual_truncatable_primes
+
+def main():
+
+    #dual_truncatable_primes = brute_force()
+    dual_truncatable_primes = dynamic_programming()
+    total = sum(dual_truncatable_primes)
+
+    print(f"The sum of sum of the only 11 primes that are both truncatable from left to right and right to left is:", total)
+    return total
+    
+if __name__ == "__main__":
+    main()

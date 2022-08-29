@@ -1,4 +1,6 @@
-alpha = {
+import math
+
+character_value = {
             '"': 0,
             ',': 0,
             'A': 1,
@@ -29,29 +31,37 @@ alpha = {
             'Z': 26
             }
 
-def word2letter(w):
-    accum = 0
-    for i in range(0,len(w)):
-        accum += alpha[w[i]]
-    return accum
+def word_value(word):
+    return sum([character_value[c] for c in word])
 
-def genTriangle(n):
-    x = 0
-    out = []
-    for i in range(0,n):
-        x += i+1
-        out += [x]
-    return out
+def Triangle(n):
+    return (n*(n+1)) // 2
 
-T = genTriangle(100)
+# We can do some math to get n from x
+#   n(n+1)/2 = x
+#   n^2 + n = 2x
+#   (n + 1/2)^2 = 2x + 1/4
+#   n = -1/2 + sqrt(2x+ 1/4)              # we only take the positive since n can't be negative
+#   n = 1/2 (-1 + sqrt(8x + 1) )
 
-words = open('p042_words.txt', 'r').readlines()
-words = words[0].split(",")
+def isTriangle(x):
+    n = (-1 + math.sqrt(8*x+1))/2
+    return x == Triangle(math.floor(n)) or x == Triangle(math.ceil(n))
 
-cnt = 0
-for w in words:
-    print w, word2letter(w)
-    if word2letter(w) in T:
-        cnt += 1
+def main(words):
+    
+    triangle_words = []
+    for word in words:
+        x = word_value(word)
+        if isTriangle(x):
+            triangle_words.append( word )
+    
+    print(f"The number of triangle words in the given text file is:", len(triangle_words))
+    return len(triangle_words)
 
-print cnt
+if __name__ == "__main__":
+    with open('p042_words.txt', 'r') as f:
+        words = f.readlines()
+        words = words[0].split(",")
+    
+    main(words)

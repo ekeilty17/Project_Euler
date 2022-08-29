@@ -1,38 +1,36 @@
-#gets digits of a number
+from collections import defaultdict 
+
 def getDigits(n):
-    out = []
-    while n != 0:
-        out = [n%10] + out
-        n /= 10
-    return out
+    return [int(d) for d in str(n)]
 
-#gets number of digits of a number
 def numDigits(n):
-    cnt = 0
-    while n != 0:
-        n /= 10
-        cnt += 1
-    return cnt
+    return len(str(n))
 
-#a*b
-def isPandigital(a,b):
-    out = getDigits(a) + getDigits(b) + getDigits(a*b)
-    if sorted(out) == [1,2,3,4,5,6,7,8,9]:
-        return True
-    return False
+def isPandigital(a, b, N):
+    digits_used = getDigits(a) + getDigits(b) + getDigits(a*b)
+    return sorted(digits_used) == list(range(1, N+1))
 
-pan = []
-i = 1
-while i < 10000:
-    j = i
-    while j < 987654322:
-        if numDigits(i) + numDigits(j) + numDigits(i*j) > 9:
-            break
-        if isPandigital(i,j):
-            print i,j,i*j
-            if i*j not in pan:
-                pan += [i*j]
-        j += 1
-    i += 1
+# The brute force is actually pretty fast
+def brute_force(N):
 
-print sum(pan)
+    pandigital_products = defaultdict(list)
+    
+    for a in range(1, 10**(N//2)):
+        for b in range(a+1, 10**(N+1)):
+            if numDigits(a) + numDigits(b) + numDigits(a*b) > N:        # This is actually a critical pruning step because it means we don't have to sort
+                break
+            if isPandigital(a, b, N):
+                pandigital_products[a*b] += [(a, b)]
+    
+    return sum(pandigital_products.keys())
+    #return len(pan)
+
+def main(N=9):
+    
+    total = brute_force(N)
+
+    print(f"The sum of all products whose multiplicand/multiplier/product identity can be written as a 1 through {N} pandigital is:", total)
+    return total
+
+if __name__ == "__main__":
+    main()

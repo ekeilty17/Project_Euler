@@ -1,14 +1,3 @@
-names = open("p022_names.txt",'r').readlines()[0]
-
-#this textfile is only one line, so we have to parse it into a list
-names = names.split(',')
-#get rid of the " "
-for i in range(0,len(names)):
-    names[i] = names[i][1:len(names[i])-1]
-
-#gotta love python
-names.sort()
-
 #getting alphabetical value
 alpha = {
         "A": 1,
@@ -39,17 +28,24 @@ alpha = {
         "Z": 26
     }
 
-def alpha_value(n):
-    accum = 0
-    for c in n:
-        accum += alpha[c]
-    return accum
+def alpha_value(name):
+    return sum([alpha[char] for char in name])
 
-accum = 0
-for n in names:
-    #have to up the index by 1 bc index starts at 0
-    accum += (names.index(n)+1) * alpha_value(n)
+def main(names):
+    total_score = 0
+    for name in names:
+        # have to increment the index by 1 bc index starts at 0
+        total_score += (names.index(name)+1) * alpha_value(name)
 
-print accum
+    print(f"The total of all the name scores in the file is:", total_score)
+    return total_score
 
-#print names.index("COLIN")+1, alpha_value("COLIN")
+if __name__ == "__main__":
+    
+    # preprocessing names file into nice format
+    with open("p022_names.txt",'r') as f:
+        names = f.readlines()[0].split(',')
+    names = [name[1:-1] for name in names]
+    names.sort()
+
+    main(names)

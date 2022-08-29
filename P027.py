@@ -1,37 +1,44 @@
+import math
+
 def isPrime(n):
-    if n <= 0:
-        return None
-    if n == 1:
+    prime_list = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41,
+                    43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+    if n < 2:
         return False
-    first_few = [      2,   3,   5,   7,  11,  13,  17,  19,  23,  29,  31,  37,  41,  43,  47, 
-                      53,  59,  61,  67,  71,  73,  79,  83,  89,  97, 101, 103, 107, 109, 113, 
-                     127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199]
-    if n in first_few:
+    if n in prime_list:
         return True
-    for i in range(2,int(n**(0.5))+1):
+    for i in range(2, int(math.sqrt(n))+1):
         if n % i == 0:
             return False
     return True
 
-n = 0
-max_string_primes = 0
-num = []
-cnt = 0
+def brute_force(N):
 
-for a in range(-1000,1001):
-    for b in range(-1000,1001):
-        print a,b
-        n = 0
-        cnt = 0
-        while True:
-            if isPrime(n**2 + a*n + b):
-                cnt += 1
-            else:
-                break
-            n += 1
-        if cnt > max_string_primes:
-            max_string_primes = cnt
-            num = [a,b]
+    max_consecutive_primes = 0
+    coef = None
 
-print  num,max_string_primes
-print num[0] * num[1]
+    for a in range(-N, N+1):
+        for b in range(-N, N+1):
+            n = 0
+            p = n**2 + a*n + b
+            while isPrime(p):
+                n += 1
+                p = n**2 + a*n + b
+            if n > max_consecutive_primes:
+                max_consecutive_primes = n
+                coef = (a, b)
+
+    return coef
+
+# TODO: make something more efficient
+
+def main(N=1000):
+    
+    coef = brute_force(N)
+
+    product = coef[0] * coef[1]
+    print(f"The product of the coefficients for the maximum consecutive primes:", product)
+    return product
+
+if __name__ == "__main__":
+    main()

@@ -1,106 +1,89 @@
-#all the usual bit operations work in python
-"""
-b = 0b10000000
-for i in range(0,10):
-    print bin(b >> i)
-
-x = 0b10
-y = 0b11
-print bin(x),bin(y)
-print "~",bin(~x),bin(~y)
-print "&",bin(x & y)
-print "|",bin(x | y)
-print "^",bin(x ^ y)
-"""
+import itertools
 
 """
-#get ascii of a character
-print bin(ord('b'))
-print bin(ord('B'))
+def char_to_binary(c):
+    # ord give the integer value of the character, and then we just convert it to binary
+    return bin(ord(c))
 
-#get character from ascii
-print chr(0b1100010)        #97
-print chr(0b1000010)        #122
-
-for i in range(32,123):
-    print i,chr(i)
+def binary_to_char(b):
+    # convert binary into base 10, and then map it back to its corresponding character
+    return chr(int(b, 2))
 """
 
-def isEnglishChar(c):
-    if 32 <= c <= 122:
-        return True
-    return False
+def get_candidate_for_keys(ciphertext_integers, text_alphabet, key_length, key_alphabet):
+    
+    # we know from the question that the encryption key consists of exactly 3 lowercase English characters
+    # which correspond to ascii integers of [97, 122] inclusive
+    possible_integer_values = [list(key_alphabet) for _ in range(key_length)]
+
+    for i in range(key_length):
+        for k in key_alphabet:
+            for j in range(i, len(ciphertext_integers), key_length):
+                n = ciphertext_integers[j]
+                if (n^k) not in text_alphabet:
+                    possible_integer_values[i].remove(k)
+                    break
+
+    return possible_integer_values
+
 
 def decrypt(s, key):
-    #in this particular instance I can skip the converting the string into ascii
-    out = ''
-    for i in range(0,len(s),len(key)):
-        for j in range(0,len(key)):
+    # in this particular instance I can skip the converting the string into ascii
+    text = ''
+    for i in range(0, len(s), len(key)):
+        for j in range(len(key)):
             if i+j < len(s):
-                out += chr( int(s[i+j]) ^ ord(key[j]) )
-                #out += chr(bin(ord(s[i+j])) ^ bin(ord(key[j])))
-    return out
+                text += chr( int(s[i+j]) ^ ord(key[j]) )
+    return text
 
-#get lines of a textfile
-lines = open('p059_cipher.txt','r').readlines();
-lines = lines[0].strip().split(',')     #strip gets rid of the \n at the end
-#print lines
+def main(ciphertext_integers, textfile_version):
+    
+    # https://simple.wikipedia.org/wiki/ASCII gives table for ASCII mapping
+    text_alphabet = list(range(32, 123))      # The question tells us that original text contains typical English Characters
+    key_length = 3                            # It was given in the problem that the key is length 3
+    key_alphabet = list(range(97, 123))       # and that the key contains only lowercase English characters, which correspond to [97, 122] inclusive
+    
 
-#convert to binary list
-bin_lines = [int(x) for x in lines]
-#print bin_lines
+    # obtain the possibilities for the keys
+    possible_integer_values = get_candidate_for_keys(ciphertext_integers, text_alphabet, key_length, key_alphabet)
+    key_candidates = ["".join([chr(n) for n in candidate]) for candidate in itertools.product(*possible_integer_values)]
+    
 
-#searching for the encryption key
-possible_first = range(97,123)
-possible_second = range(97,123)
-possible_third = range(97,123)
+    # Normally we would maybe do some Natural Language Processing to see when we get English words
+    # In this case, we can manually inspect the resulting text to find the correct key
+    """
+    for key in key_candidates:
+        original_text = decrypt(ciphertext_integers, key)
+        print("key:", key)
+        print("decrypted text:\n", original_text)
+        print()
+    """
+    
+    correct_key_index = [5, 4]
+    key = key_candidates[correct_key_index[textfile_version-1]]
+    original_text = decrypt(ciphertext_integers, key)
+    print("key:", key)
+    print("decrypted text:\n", original_text)
+    print()
 
-#for a letter to be an encrption key, xoring it should produce an english character for every letter in its period
+    # calculating result to answer the question
+    total = sum([ord(c) for c in original_text])
+    print(f"The sum of the ASCII values in the original text is", total)
+    return total
 
-#eliminating possible characters for first letter in key
-for c in range(97,123):
-    for b in range(0,len(bin_lines),3):
-        if not isEnglishChar(bin_lines[b] ^ c):
-            possible_first.remove(c)
-            break
+if __name__ == "__main__":
+    # They changed the textfile for some reason, so there's an old and new version of this question
+    #textfile_version = 1
+    textfile_version = 2
 
-#eliminating possible characters for second letter in key
-for c in range(97,123):
-    for b in range(1,len(bin_lines),3):
-        if not isEnglishChar(bin_lines[b] ^ c):
-            possible_second.remove(c)
-            break
+    with open(f'p059_cipher_v{textfile_version}.txt','r') as f:
+        lines = f.readlines()
+    
+    # obtain the ciphertext from the textfile in the form of ASCII values
+    ciphertext_integers = [int(x) for x in lines[0].strip().split(',')]
+    
+    # This gives the actual ASCII characters, but these are not needed to solve this problem
+    ciphertext_characters = [chr(n) for n in ciphertext_integers]
 
-#eliminating possible characters for third letter in key
-for c in range(97,123):
-    for b in range(2,len(bin_lines),3):
-        if not isEnglishChar(bin_lines[b] ^ c):
-            possible_third.remove(c)
-            break
-
-print possible_first
-print possible_second
-print possible_third
-
-#making all possible combinations of possible encryton keys
-possible_keys = []
-for f in possible_first:
-    for s in possible_second:
-        for t in possible_third:
-            possible_keys += [chr(f) + chr(s) + chr(t)]
-
-print possible_keys
-
-for k in possible_keys:
-    print decrypt(lines,k)
-    print
-
-print possible_keys[-1]
-print
-
-#getting sum of ascii values of original text
-original = decrypt(lines,possible_keys[-1])
-accum = 0
-for c in original:
-    accum += ord(c)
-print accum
+    # we pass in the ASCII integer
+    main(ciphertext_integers, textfile_version)

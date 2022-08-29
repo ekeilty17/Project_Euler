@@ -1,15 +1,16 @@
-import math
-
 def num_digits(n):
-    return int(math.floor(math.log10(n)))+1   
+    return len(str(n))  
 
-d = 1000
-cnt = 2
-prev = [1, 1]
-while num_digits(prev[1]) < d:
-    temp = prev[1]
-    prev[1] += prev[0]
-    prev[0] = temp
-    cnt += 1
+def main(N=1000):
 
-print prev, cnt
+    index = 2
+    f1 = f2 = 1
+    while num_digits(f2) < N:
+        f1, f2 = f2, f1 + f2
+        index += 1
+
+    print(f"The index of the first term in the Fibonacci sequence to contain 1000 digits is:", index)
+    return index
+
+if __name__ == "__main__":
+    main(1000)

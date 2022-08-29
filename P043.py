@@ -1,27 +1,29 @@
-def allPandigital(n):
-    if n == 0:
-        return [[0]]
-    if n == 1:
-        return [[0, 1], [1,0]]
-    n_1 = allPandigital(n-1)
-    out = []
-    for sL in n_1:
-        for i in range(len(sL),-1,-1):
-            out += [ sL[0:i] + [n] + sL[i:] ]
-    return out
+import itertools
 
-def numberify(L):
-    accum = 0
-    for i in range(0,len(L)):
-        accum *= 10
-        accum += L[i]
-    return accum
+def numberify(digits):
+    return int( "".join([str(d) for d in digits]) )
 
-pan = allPandigital(9)
-accum = 0
-for p in pan:
-    if  numberify(p[1:4]) % 2 == 0 and numberify(p[2:5]) % 3 == 0 and numberify(p[3:6]) % 5 == 0 and numberify(p[4:7]) % 7 == 0 and numberify(p[5:8]) % 11 == 0 and numberify(p[6:9]) % 13 == 0 and numberify(p[7:10]) % 17 == 0:
-        accum += numberify(p)
-        print numberify(p)
+def hasProperty(digits):
+    return  numberify(digits[1:4]) % 2 == 0  and numberify(digits[2:5]) % 3 == 0 and \
+            numberify(digits[3:6]) % 5 == 0  and numberify(digits[4:7]) % 7 == 0 and \
+            numberify(digits[5:8]) % 11 == 0 and numberify(digits[6:9]) % 13 == 0 and \
+            numberify(digits[7:10]) % 17 == 0
 
-print accum
+# The brute force is pretty fast
+# There's probably some better way to do it, but it's good enough for me
+def brute_force():
+    pandigital_numbers = []
+    for perm in itertools.permutations(list(range(10))):
+        if hasProperty(perm):
+            pandigital_numbers.append( numberify(perm) )
+    return pandigital_numbers
+
+def main():
+    
+    pandigital_numbers = brute_force()
+
+    print(f"The sum of all 0 to 9 pandigital numbers with this property is:", sum(pandigital_numbers))
+    return sum(pandigital_numbers)
+
+if __name__ == "__main__":
+    main()

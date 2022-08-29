@@ -1,29 +1,18 @@
-from math import log
+import numpy as np
 
-# preparing the matrix to make it usable
-f=open("p099_base_exp.txt",'r')
+def main(base_exp):
+    # log(b^e) = e * log(b)
+    # and since log() is monotonic, it doesn't change the order of the results
+    log_result = [exp * np.log(base) for base, exp in base_exp]
+    max_index = np.argmax(log_result) + 1
+    
+    print(f"The line with the largest numerical value is:", max_index)
+    return max_index
 
-L = []
-lines = f.readlines()
-for line in lines:
-    L += [line.split('\n')[0].split(',')]
-
-f.close()
-
-for i in range(len(L)):
-    L[i][0] = int(L[i][0])
-    L[i][1] = int(L[i][1])
-
-# Using the fact that log(x^b) = b*log(x)
-# and obviously taking the log of both sides will not change the inequality
-
-max_val = L[0][1] * log(L[0][0])
-line = 1
-for i in range(len(L)):
-    print i
-    if L[i][1] * log(L[i][0]) > max_val:
-        max_val = L[i][1] * log(L[i][0])
-        line = i+1
-
-print
-print line, max_val
+if __name__ == "__main__":
+    with open("p099_base_exp.txt",'r') as f:
+        lines = f.readlines()
+    
+    base_exp = [line.strip().split(',') for line in lines]
+    base_exp = [tuple([int(x) for x in pair]) for pair in base_exp]
+    main(base_exp)
